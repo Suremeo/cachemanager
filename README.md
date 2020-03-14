@@ -27,7 +27,7 @@ func main() {
 	item, _ := cache.Get("Suremeo")
 	println(item.Data.(string))
 
-	// Manually invalidate cache (usually it does it automatically when it expires)
+	// Manually remove something from cache (usually it does it automatically after it expires)
 
 	cache.Remove("Suremeo")
 
