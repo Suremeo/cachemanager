@@ -1,6 +1,3 @@
-Golang caching in memory for all data types / files
-
-
 ## How to install
 
 Run `go get github.com/suremeo/cachemanager`
