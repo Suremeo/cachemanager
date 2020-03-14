@@ -8,7 +8,7 @@ Run `go get github.com/suremeo/cachemanager`
 package main
 
 import (
-	"./cachemanager"
+	"github.com/suremeo/cachemanager"
 )
 
 var cache = cachemanager.NewCache().Run()

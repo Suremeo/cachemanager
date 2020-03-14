@@ -1,9 +1,9 @@
 package cachemanager
 
 import (
-	"./structures"
+	"./cacher"
 )
 
-func NewCache() *structures.Cacher {
-	return &structures.Cacher{}
+func NewCache() *cacher.Cacher {
+	return &cacher.Cacher{}
 }
