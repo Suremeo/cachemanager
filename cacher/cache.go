@@ -56,7 +56,6 @@ func (cache *Cacher) Run() *Cacher {
 			now := int(time.Now().Unix())
 			for index, item := range cache.items {
 				if (item.added + cache.Expire) < now {
-					println("Removed")
 					cache.items = remove(cache.items, index)
 				}
 			}
@@ -112,9 +111,7 @@ func (cache *Cacher) File(path string) (data []byte, err error, wascached bool) 
 
 func remove(slice []*Item, s int) []*Item {
 	defer func() {
-		if i := recover(); i != nil {
-			println(i.(error).Error())
-		}
+		if i := recover(); i != nil {}
 	}()
 	return append(slice[:s], slice[s+1:]...)
 }
