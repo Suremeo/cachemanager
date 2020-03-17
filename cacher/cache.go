@@ -9,6 +9,7 @@ import (
 
 type Cacher struct {
 	Expire int
+	Subsections map[string]*Cacher
 	items []*Item
 	running bool
 	mutex sync.Mutex
@@ -21,6 +22,9 @@ type Item struct {
 }
 
 func (cache *Cacher) Add (label string, item interface{}) *Cacher {
+	if !cache.running {
+		cache.Run()
+	}
 	cache.mutex.Lock()
 	cache.items = append(cache.items, &Item{
 		Identifier: label,
@@ -32,6 +36,9 @@ func (cache *Cacher) Add (label string, item interface{}) *Cacher {
 }
 
 func (cache *Cacher) Get(identifier string) (*Item, error) {
+	if !cache.running {
+		cache.Run()
+	}
 	for _, element := range cache.items {
 		if element.Identifier == identifier {
 			return element, nil
@@ -44,10 +51,14 @@ func (cache *Cacher) Run() *Cacher {
 	if cache.Expire == 0 {
 		cache.Expire = 30
 	}
+	if cache.running {
+		return cache
+	}
 	cache.running = true
 	go func(){
 		defer func() {
 			if i := recover(); i != nil {
+				cache.running = false
 				cache.Run()
 			}
 		}()
@@ -67,6 +78,9 @@ func (cache *Cacher) Run() *Cacher {
 }
 
 func (cache *Cacher) Remove(identifier string) error {
+	if !cache.running {
+		cache.Run()
+	}
 	defer func() {
 		if i := recover(); i != nil {}
 	}()
@@ -83,11 +97,17 @@ func (cache *Cacher) Remove(identifier string) error {
 }
 
 func (cache *Cacher) Clear() *Cacher {
+	if !cache.running {
+		cache.Run()
+	}
 	cache.items = []*Item{}
 	return cache
 }
 
 func (cache *Cacher) File(path string) (data []byte, err error, wascached bool) {
+	if !cache.running {
+		cache.Run()
+	}
 	id := "FILECACHE:" + path
 	item, err := cache.Get(id)
 	if err != nil {
