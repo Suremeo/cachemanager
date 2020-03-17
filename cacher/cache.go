@@ -36,7 +36,7 @@ func (cache *Cacher) Add (label string, item interface{}) *Cacher {
 }
 
 func (cache *Cacher) Get(identifier string) (*Item, error) {
-	if !cache.running {
+	if cache.running == false {
 		cache.Run()
 	}
 	for _, element := range cache.items {
@@ -48,6 +48,7 @@ func (cache *Cacher) Get(identifier string) (*Item, error) {
 }
 
 func (cache *Cacher) Run() *Cacher {
+	println("running")
 	if cache.Expire == 0 {
 		cache.Expire = 30
 	}
