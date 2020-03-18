@@ -25,6 +25,7 @@ func (cache *Cacher) Add (label string, item interface{}) *Cacher {
 	if !cache.running {
 		cache.Run()
 	}
+	cache.Remove(label)
 	cache.mutex.Lock()
 	cache.items = append(cache.items, &Item{
 		Identifier: label,
@@ -48,7 +49,6 @@ func (cache *Cacher) Get(identifier string) (*Item, error) {
 }
 
 func (cache *Cacher) Run() *Cacher {
-	println("running")
 	if cache.Expire == 0 {
 		cache.Expire = 30
 	}
