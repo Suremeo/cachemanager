@@ -40,11 +40,13 @@ func (cache *Cacher) Get(identifier string) (*Item, error) {
 	if !cache.running {
 		cache.Run()
 	}
+	cache.mutex.Lock()
 	for _, element := range cache.items {
 		if element.Identifier == identifier {
 			return element, nil
 		}
 	}
+	cache.mutex.Unlock()
 	return nil, errors.New("cache: item not cached")
 }
 
