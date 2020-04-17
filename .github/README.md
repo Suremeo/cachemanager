@@ -16,7 +16,7 @@ var cache = cachemanager.NewCache().Run()
 func main() {
 	// Add an item, item can be anything, a structure, bytes, string, int, etc
 
-	cache.Add("Suremeo", "cool guy")
+	cache.Set("Suremeo", "cool guy")
 
 	// Set how long items stay in cache (seconds) before they get automatically removed (preset is 30)
 

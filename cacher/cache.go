@@ -10,7 +10,7 @@ import (
 type Cacher struct {
 	Expire int
 	Subsections map[string]*Cacher
-	items []*Item
+	items map[string]*Item
 	running bool
 	mutex sync.Mutex
 }
@@ -21,18 +21,15 @@ type Item struct {
 	added int
 }
 
-func (cache *Cacher) Add (label string, item interface{}) *Cacher {
+func (cache *Cacher) Set(label string, item interface{}) *Cacher {
 	if !cache.running {
 		cache.Run()
 	}
-	cache.Remove(label)
-	cache.mutex.Lock()
-	cache.items = append(cache.items, &Item{
+	cache.items[label] = &Item{
 		Identifier: label,
 		Data: item,
 		added: int(time.Now().Unix()),
-	})
-	cache.mutex.Unlock()
+	}
 	return cache
 }
 
@@ -40,19 +37,19 @@ func (cache *Cacher) Get(identifier string) (*Item, error) {
 	if !cache.running {
 		cache.Run()
 	}
-	cache.mutex.Lock()
-	for _, element := range cache.items {
-		if element.Identifier == identifier {
-			return element, nil
-		}
+	dat := cache.items[identifier]
+	if dat == nil {
+		return dat, errors.New("cache: item not cached")
 	}
-	cache.mutex.Unlock()
-	return nil, errors.New("cache: item not cached")
+	return dat, nil
 }
 
 func (cache *Cacher) Run() *Cacher {
 	if cache.Expire == 0 {
 		cache.Expire = 30
+	}
+	if cache.items == nil {
+		cache.items = map[string]*Item{}
 	}
 	if cache.running {
 		return cache
@@ -68,9 +65,9 @@ func (cache *Cacher) Run() *Cacher {
 		for {
 			cache.mutex.Lock()
 			now := int(time.Now().Unix())
-			for index, item := range cache.items {
+			for key, item := range cache.items {
 				if (item.added + cache.Expire) < now {
-					cache.items = remove(cache.items, index)
+					delete(cache.items, key)
 				}
 			}
 			cache.mutex.Unlock()
@@ -80,30 +77,22 @@ func (cache *Cacher) Run() *Cacher {
 	return cache
 }
 
-func (cache *Cacher) Remove(identifier string) error {
+func (cache *Cacher) Remove(identifier string) {
 	if !cache.running {
 		cache.Run()
 	}
 	defer func() {
 		if i := recover(); i != nil {}
 	}()
-	cache.mutex.Lock()
-	for index, element := range cache.items {
-		if element.Identifier == identifier {
-			cache.items = remove(cache.items, index)
-			cache.mutex.Unlock()
-			return nil
-		}
-	}
-	cache.mutex.Unlock()
-	return errors.New("cache: Item not found")
+
+	delete(cache.items, identifier)
 }
 
 func (cache *Cacher) Clear() *Cacher {
 	if !cache.running {
 		cache.Run()
 	}
-	cache.items = []*Item{}
+	cache.items = map[string]*Item{}
 	return cache
 }
 
@@ -116,7 +105,7 @@ func (cache *Cacher) File(path string) (data []byte, err error, wascached bool) 
 	if err != nil {
 		data, err = ioutil.ReadFile(path)
 		if err == nil {
-			cache.Add(id, data)
+			cache.Set(id, data)
 		}
 	} else {
 		byt, ok := item.Data.([]byte)
@@ -125,16 +114,9 @@ func (cache *Cacher) File(path string) (data []byte, err error, wascached bool) 
 		} else {
 			data, err = ioutil.ReadFile(path)
 			if err == nil {
-				cache.Add(id, data)
+				cache.Set(id, data)
 			}
 		}
 	}
 	return data, err, false
-}
-
-func remove(slice []*Item, s int) []*Item {
-	defer func() {
-		if i := recover(); i != nil {}
-	}()
-	return append(slice[:s], slice[s+1:]...)
 }
