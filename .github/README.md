@@ -9,6 +9,7 @@ package main
 
 import (
 	"github.com/suremeo/cachemanager"
+    "time"
 )
 
 var cache = cachemanager.NewCache().Run()
@@ -20,7 +21,11 @@ func main() {
 
 	// Set how long items stay in cache (seconds) before they get automatically removed (preset is 30)
 
-	cache.Expire = 60
+	cache.Expire = 60 * time.Second
+    
+    // Set how often to tick (Loops through all cached items and removes expired ones)
+
+    cache.Tick = 1 * time.Second
 
 	// fetch from cache
 

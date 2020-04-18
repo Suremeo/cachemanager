@@ -8,7 +8,8 @@ import (
 )
 
 type Cacher struct {
-	Expire int
+	Expire time.Duration
+	Tick time.Duration
 	Subsections map[string]*Cacher
 	items map[string]*Item
 	running bool
@@ -18,7 +19,7 @@ type Cacher struct {
 type Item struct {
 	Identifier string
 	Data interface{}
-	added int
+	added time.Time
 }
 
 func (cache *Cacher) Set(label string, item interface{}) *Cacher {
@@ -28,7 +29,7 @@ func (cache *Cacher) Set(label string, item interface{}) *Cacher {
 	cache.items[label] = &Item{
 		Identifier: label,
 		Data: item,
-		added: int(time.Now().Unix()),
+		added: time.Now(),
 	}
 	return cache
 }
@@ -46,7 +47,10 @@ func (cache *Cacher) Get(identifier string) (*Item, error) {
 
 func (cache *Cacher) Run() *Cacher {
 	if cache.Expire == 0 {
-		cache.Expire = 30
+		cache.Expire = 30 * time.Second
+	}
+	if cache.Tick == 0 {
+		cache.Tick = 1*time.Second
 	}
 	if cache.items == nil {
 		cache.items = map[string]*Item{}
@@ -62,16 +66,19 @@ func (cache *Cacher) Run() *Cacher {
 				cache.Run()
 			}
 		}()
+
+		ticker := time.NewTicker(cache.Tick)
+
 		for {
+			t := <-ticker.C
 			cache.mutex.Lock()
-			now := int(time.Now().Unix())
 			for key, item := range cache.items {
-				if (item.added + cache.Expire) < now {
+				if t.Sub(item.added) > cache.Expire {
+					// expired
 					delete(cache.items, key)
 				}
 			}
 			cache.mutex.Unlock()
-			time.Sleep(1*time.Second)
 		}
 	}()
 	return cache
