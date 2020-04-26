@@ -24,7 +24,7 @@ func main() {
 	cache.Expire = 60 * time.Second
     
     // Set how often to tick (Loops through all cached items and removes expired ones)
-
+    
     cache.Tick = 1 * time.Second
 
 	// fetch from cache
