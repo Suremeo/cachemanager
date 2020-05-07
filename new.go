@@ -1,7 +1,7 @@
 package cachemanager
 
 import (
-	"./cacher"
+	"github.com/suremeo/cachemanager/cacher"
 )
 
 func NewCache() *cacher.Cacher {
